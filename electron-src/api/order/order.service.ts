@@ -1,4 +1,4 @@
-import { Order, Prisma, PrismaClient } from "../../../prisma/generated/client";
+import { Order, Prisma, PrismaClient } from '../../../prisma/generated/client';
 import OrderFindManyArgs = Prisma.OrderFindManyArgs;
 import OrderFindUniqueArgs = Prisma.OrderFindUniqueArgs;
 import OrderCountArgs = Prisma.OrderCountArgs;
@@ -8,44 +8,93 @@ import OrderDeleteArgs = Prisma.OrderDeleteArgs;
 import BatchPayload = Prisma.BatchPayload;
 import OrderUpdateManyArgs = Prisma.OrderUpdateManyArgs;
 import OrderDeleteManyArgs = Prisma.OrderDeleteManyArgs;
+import { OrderWithAllRelations, SanitizedOrder } from './order.types';
+import { sanitizeOrder, sanitizeOrders } from './lib/generate-order-object';
 
 const prisma = new PrismaClient();
 
-export const getOrders = async (
-  options: OrderFindManyArgs
-): Promise<Order[]> => {
-  return prisma.order.findMany(options);
-};
+export default {
+    getMany: async (
+        options: OrderFindManyArgs
+    ): Promise<OrderWithAllRelations[]> => {
+        options = {
+            ...options,
+            include: {
+                orderItems: true,
+                shippings: true,
+            },
+        };
 
-export const getOrder = async (
-  options: OrderFindUniqueArgs
-): Promise<Order | null> => {
-  return prisma.order.findUnique(options);
-};
+        const orders = ((await prisma.order.findMany(
+            options
+        )) as unknown) as OrderWithAllRelations[];
+        return sanitizeOrders(orders);
+    },
 
-export const countOrders = (options: OrderCountArgs): Promise<number> => {
-  return prisma.order.count(options);
-};
+    getOne: async (
+        options: OrderFindUniqueArgs
+    ): Promise<SanitizedOrder | null> => {
+        options = {
+            ...options,
+            include: {
+                orderItems: true,
+                shippings: true,
+            },
+        };
 
-export const createOrder = (options: OrderCreateArgs): Promise<Order> => {
-  return prisma.order.create(options);
-};
+        const order = ((await prisma.order.findUnique(
+            options
+        )) as unknown) as OrderWithAllRelations;
 
-export const updateOrder = (options: OrderUpdateArgs): Promise<Order> => {
-  return prisma.order.update(options);
-};
+        if (order) return sanitizeOrder(order);
+        else return null;
+    },
 
-export const updateOrders = (
-  options: OrderUpdateManyArgs
-): Promise<BatchPayload> => {
-  return prisma.order.updateMany(options);
-};
+    count: async (options: OrderCountArgs): Promise<number> => {
+        return prisma.order.count(options);
+    },
 
-export const deleteOrder = (options: OrderDeleteArgs): Promise<Order> => {
-  return prisma.order.delete(options);
-};
-export const deleteOrders = (
-  options: OrderDeleteManyArgs
-): Promise<BatchPayload> => {
-  return prisma.order.deleteMany(options);
+    create: async (options: OrderCreateArgs): Promise<SanitizedOrder> => {
+        options = {
+            ...options,
+            include: {
+                orderItems: true,
+                shippings: true,
+            },
+        };
+        return sanitizeOrder(
+            ((await prisma.order.create(
+                options
+            )) as unknown) as OrderWithAllRelations
+        );
+    },
+
+    updateOne: async (
+        options: OrderUpdateArgs
+    ): Promise<OrderWithAllRelations> => {
+        options = {
+            ...options,
+            include: {
+                orderItems: true,
+                shippings: true,
+            },
+        };
+
+        return sanitizeOrder(
+            ((await prisma.order.update(
+                options
+            )) as unknown) as OrderWithAllRelations
+        );
+    },
+
+    updateMany: async (options: OrderUpdateManyArgs): Promise<BatchPayload> => {
+        return prisma.order.updateMany(options);
+    },
+
+    delete: async (options: OrderDeleteArgs): Promise<Order> => {
+        return prisma.order.delete(options);
+    },
+    deleteMany: async (options: OrderDeleteManyArgs): Promise<BatchPayload> => {
+        return prisma.order.deleteMany(options);
+    },
 };

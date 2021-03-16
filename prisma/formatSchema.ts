@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from 'fs';
+import * as path from 'path';
 
-const PRISMA_FILE_PATH = path.join(__dirname, "..", "prisma", "schema.prisma");
+const PRISMA_FILE_PATH = path.join(__dirname, '..', 'prisma', 'schema.prisma');
 
 function snakeToCamel(str: string) {
     return str.replace(/([-_]\w)/g, (g) => g[1].toUpperCase());
@@ -11,7 +11,7 @@ function snakeToPascal(str: string) {
     return `${camelCase[0].toUpperCase()}${camelCase.substr(1)}`;
 }
 
-const PRISMA_PRIMITIVES = ["String", "Boolean", "Int", "Float", "DateTime"];
+const PRISMA_PRIMITIVES = ['String', 'Boolean', 'Int', 'Float', 'DateTime'];
 
 function isPrimitiveType(typeName: string) {
     return PRISMA_PRIMITIVES.includes(typeName);
@@ -19,15 +19,15 @@ function isPrimitiveType(typeName: string) {
 
 function fixFieldsArrayString(fields: string) {
     return fields
-        .split(", ")
+        .split(', ')
         .map((field) => snakeToCamel(field))
-        .join(", ");
+        .join(', ');
 }
 
 async function fixPrismaFile() {
-    const text = fs.readFileSync(path.join(PRISMA_FILE_PATH), "utf8");
+    const text = fs.readFileSync(path.join(PRISMA_FILE_PATH), 'utf8');
 
-    const textAsArray = text.split("\n");
+    const textAsArray = text.split('\n');
 
     const fixedText = [];
     let currentModelName: string | null = null;
@@ -51,9 +51,9 @@ async function fixPrismaFile() {
         }
 
         // Add the @@map to the table name for the model
-        if (!hasAddedModelMap && (line.match(/\s+@@/) || line === "}")) {
-            if (line === "}") {
-                fixedText.push("");
+        if (!hasAddedModelMap && (line.match(/\s+@@/) || line === '}')) {
+            if (line === '}') {
+                fixedText.push('');
             }
             fixedText.push(`  @@map("${currentModelName}")`);
             hasAddedModelMap = true;
@@ -64,10 +64,15 @@ async function fixPrismaFile() {
         const fieldMatch = line.match(/\s\s(\w+)\s+(\w+)(\[\])?/);
         let fixedLine = line;
         if (fieldMatch) {
-            const [, currentFieldName, currentFieldType, isArrayType] = fieldMatch;
+            const [
+                ,
+                currentFieldName,
+                currentFieldType,
+                isArrayType,
+            ] = fieldMatch;
 
             let fixedFieldName = snakeToCamel(currentFieldName);
-            if (isArrayType && !fixedFieldName.endsWith("s")) {
+            if (isArrayType && !fixedFieldName.endsWith('s')) {
                 fixedFieldName = `${fixedFieldName}s`;
             }
 
@@ -75,7 +80,10 @@ async function fixPrismaFile() {
 
             // Add map if we needed to convert the field name and the field is not a relational type
             // If it's relational, the field type will be a non-primitive, hence the isPrimitiveType check
-            if (currentFieldName.includes("_") && isPrimitiveType(currentFieldType)) {
+            if (
+                currentFieldName.includes('_') &&
+                isPrimitiveType(currentFieldType)
+            ) {
                 fixedLine = `${fixedLine} @map("${currentFieldName}")`;
             }
         }
@@ -84,7 +92,9 @@ async function fixPrismaFile() {
         const fieldTypeMatch = fixedLine.match(/\s\s\w+\s+(\w+)/);
         if (fieldTypeMatch) {
             const currentFieldType = fieldTypeMatch[1];
-            const fieldTypeIndex = fieldTypeMatch[0].lastIndexOf(currentFieldType);
+            const fieldTypeIndex = fieldTypeMatch[0].lastIndexOf(
+                currentFieldType
+            );
             const fixedFieldType = snakeToPascal(currentFieldType);
             const startOfLine = fixedLine.substr(0, fieldTypeIndex);
             const restOfLine = fixedLine.substr(
@@ -110,7 +120,7 @@ async function fixPrismaFile() {
         fixedText.push(fixedLine);
     }
 
-    fs.writeFileSync(PRISMA_FILE_PATH, fixedText.join("\n"));
+    fs.writeFileSync(PRISMA_FILE_PATH, fixedText.join('\n'));
 }
 
 fixPrismaFile();

@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-   output   = "./generated/client"
+  output   = "./generated/client"
 }
 
 datasource db {
@@ -9,35 +9,45 @@ datasource db {
 }
 
 model Item {
-  id         Int          @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   name       String
-  partNo    String? @map("part_no")
-  rate       Float?
+  partNo     String?     @map("part_no")
+  mrp        Float?
   orderItems OrderItem[]
 
   @@map("item")
 }
 
+model OrderItem {
+  id          Int   @id @default(autoincrement())
+  orderId     Int   @map("order_id")
+  itemId      Int   @map("item_id")
+  rate        Float
+  receivedQty Int?  @default(0) @map("received_qty")
+  orderedQty  Int   @map("ordered_qty")
+  item        Item  @relation(fields: [itemId], references: [id])
+  order       Order @relation("orderToorder_item", fields: [orderId], references: [id])
+
+  @@map("order_item")
+}
+
 model Order {
-  id           Int          @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   orderedDate DateTime? @map("ordered_date")
-  amount       Float?
-  hasReceived Boolean? @map("has_received")
-  payed        Boolean?
-  orderItems   OrderItem[]
+  isCompleted Boolean     @default(false) @map("is_completed")
+  orderItems   OrderItem[] @relation("orderToorder_item")
+  shippings     Shipping[]
 
   @@map("order")
 }
 
-model OrderItem {
-  id        Int    @id @default(autoincrement())
-  orderId  Int? @map("order_id")
-  itemId   Int? @map("item_id")
-  rate      Float?
-  qty       Int?
-  subTotal Float? @map("sub_total")
-  item      Item?  @relation(fields: [itemId], references: [id])
-  order     Order? @relation(fields: [orderId], references: [id])
+model Shipping {
+  id           Int       @id @default(autoincrement())
+  orderId     Int? @map("order_id")
+  shippedDate DateTime @map("shipped_date")
+  arrivalDate DateTime? @map("arrival_date")
+  description  String?
+  order        Order?    @relation(fields: [orderId], references: [id])
 
-  @@map("order_item")
+  @@map("shipping")
 }
