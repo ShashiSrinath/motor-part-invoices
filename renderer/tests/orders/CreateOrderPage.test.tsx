@@ -2,6 +2,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import CreateOrderPage from '../../pages/orders/create';
 import dayjs from 'dayjs';
 
+it('should show the main title', async function () {
+    await waitFor(() => {
+        render(<CreateOrderPage />);
+    });
+
+    expect(screen.queryByText('Create an Order')).toBeTruthy();
+});
+
 describe('ordered date element', () => {
     it('should render', async function () {
         await waitFor(() => {
