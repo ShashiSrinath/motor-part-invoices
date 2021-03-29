@@ -41,3 +41,4 @@ data/
 prisma/generated/
 
 prisma/formatSchema.js
+/electron-src/prisma-client.js
