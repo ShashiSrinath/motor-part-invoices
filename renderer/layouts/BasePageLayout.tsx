@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import Head from 'next/head';
 import { createStyles, makeStyles, Theme } from '@material-ui/core';
 
@@ -13,12 +13,7 @@ const useStyles = makeStyles((_theme: Theme) =>
     })
 );
 
-type Props = {
-    children: ReactNode;
-    title?: string;
-};
-
-const Layout = ({ children, title = 'This is the default title' }: Props) => {
+const BasePageLayout: React.FC<{ title: string }> = ({ children, title }) => {
     const classes = useStyles();
 
     return (
@@ -37,4 +32,4 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
     );
 };
 
-export default Layout;
+export default BasePageLayout;
