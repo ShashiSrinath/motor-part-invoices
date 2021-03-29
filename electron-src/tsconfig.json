@@ -17,7 +17,9 @@
         "skipLibCheck": true,
         "strict": true,
         "target": "esnext",
-        "outDir": "../main"
+        "outDir": "../main",
+        "inlineSources": true,
+        "inlineSourceMap": true
     },
     "exclude": ["node_modules", "**/*.test.ts", "**/*.spec.ts"],
     "include": ["**/*.ts", "**/*.tsx", "**/*.js"]
